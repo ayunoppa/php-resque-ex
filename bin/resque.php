@@ -72,28 +72,29 @@ if (!empty($COUNT) && $COUNT > 1) {
     $count = $COUNT;
 }
 
-if ($count > 0) {
-    for ($i = 0; $i < $count; ++$i) {
-        $pid = pcntl_fork();
-        if ($pid == -1) {
-            die("Could not fork worker " . $i . "\n");
-        } elseif (!$pid) { // Child, start the worker
-            $queues = explode(',', $QUEUE);
-            $worker = new Resque_Worker($queues);
-            $worker->registerLogger($logger);
-            $worker->logLevel = $logLevel;
+for ($i = 0; $i < $count; ++$i) {
+    $pid = pcntl_fork();
+    if ($pid == -1) {
+        die("Could not fork worker " . $i . "\n");
+    } elseif (!$pid) { // Child, start the worker
+        $queues = explode(',', $QUEUE);
+        $worker = new Resque_Worker($queues);
+        $worker->registerLogger($logger);
+        $worker->logLevel = $logLevel;
     
+        if ($count == 1) {
             $PIDFILE = getenv('PIDFILE');
             if ($PIDFILE) {
                  file_put_contents($PIDFILE, getmypid()) or die('Could not write PID information to ' . $PIDFILE);
             }
-
-            logStart($logger, array('message' => '*** Starting worker ' . $worker, 'data' => array('type' => 'start', 'worker' => (string) $worker)), $logLevel);
-            $worker->work($interval);
-            break;
         }
+
+        logStart($logger, array('message' => '*** Starting worker ' . $worker, 'data' => array('type' => 'start', 'worker' => (string) $worker)), $logLevel);
+        $worker->work($interval);
+        break;
     }
 }
+
 
 function logStart($logger, $message, $logLevel)
 {
