@@ -77,7 +77,6 @@ for ($i = 0; $i < $count; ++$i) {
     if ($pid == -1) {
         die("Could not fork worker " . $i . "\n");
     } elseif (!$pid) { // Child, start the worker
-        startWorker($QUEUE, $logLevel, $logger, $interval);
 
         if ($count == 1) {
             $PIDFILE = getenv('PIDFILE');
@@ -85,7 +84,7 @@ for ($i = 0; $i < $count; ++$i) {
                  file_put_contents($PIDFILE, getmypid()) or die('Could not write PID information to ' . $PIDFILE);
             }
         }
-
+        startWorker($QUEUE, $logLevel, $logger, $interval);
         break;
     }
 }
