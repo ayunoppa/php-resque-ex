@@ -72,7 +72,19 @@ class Resque
 		}
 
 		if(!is_null(self::$redis)) {
-			return self::$redis;
+			try {
+				// getを試みる
+				self::$redis->get('connection_test');
+				return self::$redis;
+			} catch (Exception $e) {
+				if ($e instanceof RedisException && $e->getCode() == 0) {
+					// redisのlost connection の場合
+					self::$redis = null;
+				} else {
+					// 上記以外
+					throw $e;
+				}
+			}
 		}
 
 		$server = self::$redisServer;
